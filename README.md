@@ -1,90 +1,100 @@
-# Fursat
+﻿# Retail Vision: Safety-Compliance Detection with YOLOv8
 
-**Log off. Live more.**
+End-to-end object detection project for a Deep Learning course. A YOLOv8 model detects personal protective equipment (PPE) and missing PPE, and the detections are turned into image-level **compliance alerts**.
 
-Booking and admin app for Fursat, an offline adventure resort and digital detox retreat. Guests book short phone-free stays, seal their phones in a locker at check-in, and spend the days on treks, cooking, art, sport and bonfires. Companies book team retreats, and friends and family can gift an escape.
+> **Note on scale:** results come from a CPU-scaled run (416 px images, 40% of the training set, 10 epochs, two optimizers). Absolute accuracy is lower than a full GPU run would give; the pipeline and the comparisons are the point.
 
-## Tech stack
+## What is in this project
+1. **Data audit:** class balance, object sizes, spatial distribution, ground-truth samples.
+2. **Optimizer experiment:** SGD vs AdamW on YOLOv8n, same seed and settings.
+3. **Held-out evaluation:** model chosen on validation, reported on the test split (mAP, per-class AP, PR/F1 curves, confusion matrix).
+4. **Operating-point tuning:** confidence threshold from the F1 curve.
+5. **Compliance alerts:** an image is a violation if a `no_*` class is detected; precision/recall trade-off with a balanced and a safety-first threshold.
+6. **Deployment speed:** PyTorch vs ONNX on CPU.
+7. **Demo video** with a COMPLIANT / VIOLATION banner.
 
-- Next.js 14 (App Router) and React 18
-- Tailwind CSS 3
-- Prisma 5 with SQLite (free, no database server needed)
-- NextAuth for login
-- Razorpay for payments (test mode is free)
-- Nodemailer for confirmation emails
+## Results
 
-## What you need first
-
-- Node.js 18.17 or newer (check with `node -v`)
-- VS Code
-
-## Setup
-
-1. Open a terminal in the project folder (the one that contains this README).
-
-2. Install the packages:
-   ```
-   npm install
-   ```
-
-3. Open `.env` and fill in the values. For a first run you only need to change `NEXTAUTH_SECRET`. Generate a secret with:
-   ```
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   ```
-   Payments and email will not work until you add Razorpay test keys and SMTP details, but the rest of the app runs without them.
-
-4. Create the database (this needs `prisma/schema.prisma`, which is built in a later step):
-   ```
-   npm run db:push
-   npm run db:seed
-   ```
-
-5. Start the app:
-   ```
-   npm run dev
-   ```
-
-6. Open http://localhost:3000 in your browser. The admin dashboard is at http://localhost:3000/admin/dashboard.
-
-## Scripts
-
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Starts the app in development mode |
-| `npm run build` | Builds the app for production |
-| `npm run start` | Runs the production build |
-| `npm run lint` | Checks the code for problems |
-| `npm run db:push` | Creates or updates the database tables from the schema |
-| `npm run db:seed` | Adds starter data and the first admin account |
-| `npm run db:studio` | Opens a visual database browser |
-
-## Folder layout
+Training runs (validation split):
 
 ```
-fursat/
-  app/                  Pages and API routes
-    admin/              Admin pages (dashboard, bookings, lockers, ...)
-    api/                Backend routes (bookings, payments, check-in, ...)
-    retreats/           Public retreat pages
-    booking/            Booking flow
-    gift/               Gift voucher page
-    corporate/          Team retreat enquiry
-    checkin/            Digital check-in and phone locker
-  components/           Reusable interface pieces
-  lib/                  Database, auth, payments, email, pricing helpers
-  prisma/               Database schema and seed script
-  public/               Images and logo
-  styles/               Global styles
+name,weights,optimizer,lr0,epochs_run,best_epoch,precision,recall,map50,map5095,params_m,size_mb,train_min
+v8n_SGD,yolov8n.pt,SGD,0.01,10,10,0.61636,0.50672,0.51286,0.3212,3.14,6.5,18.2
+v8n_AdamW,yolov8n.pt,AdamW,0.001,10,10,0.57198,0.51287,0.49981,0.30462,3.14,6.5,17.3
 ```
 
-## Keep these safe
+Final model summary:
 
-- Never share or upload `.env`. Make sure `.env` is listed in `.gitignore` before you use git.
-- Use Razorpay **test** keys while building. Switch to live keys only when you launch.
+```
+FINAL MODEL : v8n_SGD  (SGD, lr0=0.01, 3.14 M params, 6.5 MB)
+VAL mAP50-95 : 0.321   mAP50: 0.523   P: 0.634   R: 0.524
+Best conf threshold (F1)   : 0.22
+Alert (balanced)           : {'mode': 'balanced (max F1)', 'threshold': 0.05, 'precision': 0.883, 'recall': 0.857, 'f1': 0.87, 'caught': 144, 'missed': 24, 'false_alarms': 19}
+Alert (safety-first)       : {'mode': 'safety-first (recall>=95%)', 'threshold': 0.05, 'precision': 0.883, 'recall': 0.857, 'f1': 0.87, 'caught': 144, 'missed': 24, 'false_alarms': 19}
+Speed                      : [{'setup': 'PyTorch FP32 - CPU', 'ms_per_image': 72.3, 'FPS': 13.8}, {'setup': 'ONNX - CPU', 'ms_per_image': 25.5, 'FPS': 39.2}]
+```
 
-## Troubleshooting
+Per-class metrics (test split):
 
-- **`node` is not recognized:** install Node.js LTS from nodejs.org, then fully close and reopen VS Code.
-- **PowerShell says scripts are disabled:** switch the terminal to Command Prompt (the dropdown next to the + in the terminal panel), or run `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` once.
-- **Page shows a 404:** check the folder and file names exactly, for example `app/admin/dashboard/page.js`.
-- **Port 3000 is busy:** run `npm run dev -- -p 3001` and open http://localhost:3001.
+```
+class,precision,recall,AP50,AP50-95
+Person,0.8345355999420542,0.8544698544698545,0.8879077441625546,0.6717714169538821
+vest,0.7984330373917257,0.8235294117647058,0.8429382877710812,0.5757257129405899
+helmet,0.7887860837373613,0.6351281112651763,0.6762774769839961,0.480790485959271
+forklift,0.5411482846258147,0.7808219178082192,0.6605742017682781,0.40804196240452006
+gloves,0.6232913039167384,0.6010498687664042,0.6078368160131757,0.3513938268493895
+no_vest,0.8710082770538483,0.5194428553733946,0.6046921261542171,0.345872807628698
+boots,0.5687112355030264,0.5966735966735967,0.5197360270201649,0.3409700456143388
+no_helmet,0.7351083963701871,0.41899441340782123,0.43394142477571834,0.20493870276439802
+no_boots,0.4097180789905107,0.3539325842696629,0.3186118921414205,0.18521545741973963
+no_gloves,0.6518001580825464,0.2512315270935961,0.32524825168310567,0.17414942255800997
+goggles,0.44518323471914417,0.4460431654676259,0.37149717917122743,0.10307280403066373
+no_goggle,0.3373100506836083,0.012195121951219513,0.02502763902485298,0.014121184955116878
+```
+
+Violation alert operating points:
+
+```
+mode,threshold,precision,recall,f1,caught,missed,false_alarms
+balanced (max F1),0.05,0.883,0.857,0.87,144,24,19
+safety-first (recall>=95%),0.05,0.883,0.857,0.87,144,24,19
+```
+
+Inference speed:
+
+```
+setup,ms_per_image,FPS
+PyTorch FP32 - CPU,72.3,13.8
+ONNX - CPU,25.5,39.2
+```
+
+
+Figures are in `yolo_retail_cpu/figures/`, the demo video is `yolo_retail_cpu/demo_raw.mp4` (download to play), and the fully executed notebook with every output is `full_done.ipynb`.
+
+## Repository layout
+| Path | Contents |
+|---|---|
+| `YOLO_Retail_Vision_PPE_cpu_local.ipynb` | Notebook used for the reported results (CPU) |
+| `YOLO_Retail_Vision_PPE.ipynb` | Full-size version for a Colab T4 GPU |
+| `full_done.ipynb` | The CPU notebook executed, with every output |
+| `yolo_retail_cpu/figures/` | Plots, tables (CSV) and SUMMARY.txt |
+| `runs/` | Ultralytics training runs (curves, weights) |
+
+## Reproduce
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate    Linux/macOS: source .venv/bin/activate
+pip install ultralytics seaborn scikit-learn pandas matplotlib jupyter nbconvert ipykernel
+jupyter nbconvert --to notebook --execute YOLO_Retail_Vision_PPE_cpu_local.ipynb --output full_done.ipynb --ExecutePreprocessor.timeout=-1
+```
+The dataset downloads automatically on first run. On a GPU, use `YOLO_Retail_Vision_PPE.ipynb` (for example in Colab).
+
+## Limitations
+- CPU-scaled run; only SGD and AdamW compared; one seed per run, so small differences may be noise.
+- Image-level alerts only; no tracking across video frames.
+- Single dataset and camera style; privacy implications of detecting people must be considered before any real deployment.
+
+## Credits and licence
+- Built with Ultralytics YOLOv8 (AGPL-3.0): https://github.com/ultralytics/ultralytics
+- Dataset: Ultralytics Construction-PPE, downloaded automatically and not redistributed here. Check its licence terms on the Ultralytics docs.
+- Because the code depends on Ultralytics (AGPL-3.0), this repository is released under AGPL-3.0.
