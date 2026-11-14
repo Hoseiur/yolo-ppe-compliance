@@ -1,0 +1,6 @@
+FINAL MODEL : v8n_SGD  (SGD, lr0=0.01, 3.14 M params, 6.5 MB)
+VAL mAP50-95 : 0.321   mAP50: 0.523   P: 0.634   R: 0.524
+Best conf threshold (F1)   : 0.22
+Alert (balanced)           : {'mode': 'balanced (max F1)', 'threshold': 0.05, 'precision': 0.883, 'recall': 0.857, 'f1': 0.87, 'caught': 144, 'missed': 24, 'false_alarms': 19}
+Alert (safety-first)       : {'mode': 'safety-first (recall>=95%)', 'threshold': 0.05, 'precision': 0.883, 'recall': 0.857, 'f1': 0.87, 'caught': 144, 'missed': 24, 'false_alarms': 19}
+Speed                      : [{'setup': 'PyTorch FP32 - CPU', 'ms_per_image': 72.3, 'FPS': 13.8}, {'setup': 'ONNX - CPU', 'ms_per_image': 25.5, 'FPS': 39.2}]

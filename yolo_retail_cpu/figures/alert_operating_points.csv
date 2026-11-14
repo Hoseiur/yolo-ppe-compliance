@@ -1,0 +1,3 @@
+mode,threshold,precision,recall,f1,caught,missed,false_alarms
+balanced (max F1),0.05,0.883,0.857,0.87,144,24,19
+safety-first (recall>=95%),0.05,0.883,0.857,0.87,144,24,19

@@ -1,0 +1,3 @@
+setup,ms_per_image,FPS
+PyTorch FP32 - CPU,72.3,13.8
+ONNX - CPU,25.5,39.2

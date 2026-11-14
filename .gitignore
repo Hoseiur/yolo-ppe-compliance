@@ -1,0 +1,11 @@
+.venv/
+datasets/
+__pycache__/
+.ipynb_checkpoints/
+yolov8n.pt
+yolov8s.pt
+last.pt
+quick_done.ipynb
+yolo_retail_cpu_quick/
+runs/detect/yolo_retail_cpu_quick/
+*.zip

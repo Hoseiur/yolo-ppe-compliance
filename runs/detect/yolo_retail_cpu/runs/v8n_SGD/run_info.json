@@ -1,0 +1,16 @@
+{
+  "name": "v8n_SGD",
+  "dir": "C:\\Users\\khush\\yolo_project\\runs\\detect\\yolo_retail_cpu\\runs\\v8n_SGD",
+  "weights": "yolov8n.pt",
+  "optimizer": "SGD",
+  "lr0": 0.01,
+  "train_min": 18.2,
+  "epochs_run": 10,
+  "best_epoch": 10,
+  "precision": 0.61636,
+  "recall": 0.50672,
+  "map50": 0.51286,
+  "map5095": 0.3212,
+  "params_m": 3.14,
+  "size_mb": 6.5
+}
