@@ -7,9 +7,9 @@ End-to-end object detection project for a Deep Learning course. A YOLOv8 model d
 ## What is in this project
 1. **Data audit:** class balance, object sizes, spatial distribution, ground-truth samples.
 2. **Optimizer experiment:** SGD vs AdamW on YOLOv8n, same seed and settings.
-3. **Held-out evaluation:** model chosen on validation, reported on the test split (mAP, per-class AP, PR/F1 curves, confusion matrix).
+3. **Evaluation:** model chosen on validation, evaluated on the validation split (this dataset setup has no separate test split, so selection and reporting use the same data and are slightly optimistic).
 4. **Operating-point tuning:** confidence threshold from the F1 curve.
-5. **Compliance alerts:** an image is a violation if a `no_*` class is detected; precision/recall trade-off with a balanced and a safety-first threshold.
+5. **Compliance alerts:** an image is a violation if a `no_*` class is detected; precision/recall trade-off swept over alert thresholds (the 95%-recall target was not reachable, see Findings).
 6. **Deployment speed:** PyTorch vs ONNX on CPU.
 7. **Demo video** with a COMPLIANT / VIOLATION banner.
 
@@ -34,7 +34,7 @@ Alert (safety-first)       : {'mode': 'safety-first (recall>=95%)', 'threshold':
 Speed                      : [{'setup': 'PyTorch FP32 - CPU', 'ms_per_image': 72.3, 'FPS': 13.8}, {'setup': 'ONNX - CPU', 'ms_per_image': 25.5, 'FPS': 39.2}]
 ```
 
-Per-class metrics (test split):
+Per-class metrics (validation split):
 
 ```
 class,precision,recall,AP50,AP50-95
@@ -97,3 +97,12 @@ The dataset downloads automatically on first run.
 - Built with Ultralytics YOLOv8 (AGPL-3.0): https://github.com/ultralytics/ultralytics
 - Dataset: Ultralytics Construction-PPE, downloaded automatically and not redistributed here. Check its licence terms on the Ultralytics docs.
 - Because the code depends on Ultralytics (AGPL-3.0), this repository is released under AGPL-3.0.
+
+
+## Findings and caveats
+- Final model: YOLOv8n with SGD, validation mAP50 0.523 and mAP50-95 0.321. Both runs were still improving at epoch 10, so they are undertrained (CPU-scaled run).
+- SGD (0.321) vs AdamW (0.305): small gap, one seed per run, learning rates not tuned, so not conclusive.
+- Strongest classes: Person, vest, helmet. Weakest: the missing-PPE classes, especially no_goggle (AP50-95 0.014, recall 0.012), then no_gloves, no_boots and no_helmet.
+- Image-level violation alerts at the lowest threshold evaluated (0.05): precision 0.883, recall 0.857 (144 caught, 24 missed, 19 false alarms). The 95%-recall target was not reachable, so the "safety-first" row in the table equals the balanced row. Thresholds below 0.05 were not evaluated.
+- Speed: ONNX on CPU 25.5 ms per image (39 FPS) vs PyTorch on CPU 72.3 ms (13.8 FPS). No GPU was used.
+- No separate test split was available; the validation split was used for model selection and reporting.
