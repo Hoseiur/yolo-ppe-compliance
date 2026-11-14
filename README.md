@@ -75,7 +75,6 @@ Figures are in `yolo_retail_cpu/figures/`, the demo video is `yolo_retail_cpu/de
 | Path | Contents |
 |---|---|
 | `YOLO_Retail_Vision_PPE_cpu_local.ipynb` | Notebook used for the reported results (CPU) |
-| `YOLO_Retail_Vision_PPE.ipynb` | Full-size version for a Colab T4 GPU |
 | `full_done.ipynb` | The CPU notebook executed, with every output |
 | `yolo_retail_cpu/figures/` | Plots, tables (CSV) and SUMMARY.txt |
 | `runs/` | Ultralytics training runs (curves, weights) |
@@ -87,7 +86,7 @@ python -m venv .venv
 pip install ultralytics seaborn scikit-learn pandas matplotlib jupyter nbconvert ipykernel
 jupyter nbconvert --to notebook --execute YOLO_Retail_Vision_PPE_cpu_local.ipynb --output full_done.ipynb --ExecutePreprocessor.timeout=-1
 ```
-The dataset downloads automatically on first run. On a GPU, use `YOLO_Retail_Vision_PPE.ipynb` (for example in Colab).
+The dataset downloads automatically on first run.
 
 ## Limitations
 - CPU-scaled run; only SGD and AdamW compared; one seed per run, so small differences may be noise.
